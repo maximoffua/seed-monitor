@@ -8,13 +8,12 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
-    runs-on: ${{ matrix.os }}
+        target: [mqtt]
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: DeterminateSystems/nix-installer-action@main
       - uses: DeterminateSystems/magic-nix-cache-action@main
-#      - uses: cachix/install-nix-action@v23
       - uses: cachix/cachix-action@v12
         with:
           name: devenv
@@ -23,7 +22,7 @@ jobs:
       - name: Build the devenv shell and run any pre-commit hooks
         run: devenv ci
       - name: Run a single command in the devenv shell
-        run: devenv shell build mqtt
+        run: devenv shell build ${{ matrix.target }}
       - uses: actions/upload-artifact@v4
         with:
           name: firmware
