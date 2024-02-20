@@ -1,9 +1,31 @@
-{ pkgs, ... }:
+{pkgs, lib, config, ...}:
+let
+    pio = import ./modules/platformio.nix { inherit pkgs; };
+    gcc-arm = pio.mkPlatformIOPackage "toolchain-gccarmnoneeabi" [pkgs.gcc-arm-embedded];
+    openocd = pio.mkPlatformIOPackage "tool-openocd" [pkgs.openocd];
+in
+ {
+ imports = [
+    ./modules/toolchain.nix
+  ];
 
-{
+  languages.python = {
+    enable = true;
+    package = pkgs.python3.withPackages (ps: with ps; [
+        pyserial
+        pkgs.platformio
+    ]);
+  };
+
+  languages.platformio = {
+    enable = true;
+    platformPackages = [ gcc-arm openocd ];
+  };
+  languages.nix.enable = true;
+
   packages = [
-    pkgs.platformio
-    pkgs.openocd
+  pkgs.gcc-arm-embedded
+  pkgs.openocd
   ];
 
   enterShell = ''
