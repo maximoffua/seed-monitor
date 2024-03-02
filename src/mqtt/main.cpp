@@ -2,33 +2,59 @@
 // Created by smaximov on 20.02.24.
 //
 
-#include "main.hpp"
-#include "AccessPoint.hpp"
+#include "wifi.hpp"
+
 WiFiServer server(80);
 
-int MTech::AccessPoint::status = WL_IDLE_STATUS;
+using namespace MTech;
+
+namespace MTech {
+int Wireless::status = WL_IDLE_STATUS;
+}
 
 void setup() {
 //Initialize serial and wait for port to open:
     Serial.begin(115200);
     while (!Serial) {
-        ; // wait for serial port to connect. Needed for native USB port only
+        delay(20); // wait for serial port to connect. Needed for native USB port only
     }
     Serial.println("Access Point Web Server");
 
     pinMode(led, OUTPUT);      // set the LED pin mode
 
     // check for the WiFi module:
-    if (WiFi.status() == WL_NO_MODULE) {
-        Serial.println("Communication with WiFi module failed!");
+    if (!Wireless::checkModule()) {
+        Serial.println("WiFi module is not available");
         // don't continue
-        while (true);
+        while (true) { delay(20); }
     }
 
-    String fv = WiFi.firmwareVersion();
-    if (fv < WIFI_FIRMWARE_LATEST_VERSION) {
-        Serial.println("Please upgrade the firmware");
+    AccessPoint::status = WiFi.status();
+    // attempt to connect to WiFi network:
+    while (AccessPoint::status != WL_CONNECTED) {
+        Serial.print("Attempting initial connection to WPA SSID: ");
+        Serial.println(ssid);
+        // Connect to WPA/WPA2 network:
+        AccessPoint::status = static_cast<wl_status_t>(WiFi.begin("BigBrother", "88498849"));
+        lefteye();
+        righteye();
+        matrix.renderBitmap(frame, 8, 12);
+        delay(1000);
+        wink();
+        matrix.renderBitmap(frame, 8, 12);
+
+        // wait 15 seconds for connection:
+        delay(14000);
     }
+
+    // you're connected now, so print out the data:
+    lefteye();
+    righteye();
+    mouth();
+    matrix.renderBitmap(frame, 8, 12);
+    Serial.print("You're connected to the network");
+    Wireless::printCurrentNet();
+    Wireless::printWifiData();
 
     MTech::AccessPoint::start();
     // wait 4 seconds for connection:
