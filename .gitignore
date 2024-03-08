@@ -16,3 +16,4 @@ devenv.local.nix
 .gcc-flags.json
 .pio
 
+/compile_commands.json

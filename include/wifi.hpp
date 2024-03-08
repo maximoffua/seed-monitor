@@ -6,7 +6,6 @@
 #define SEEDER_WIFI_HPP
 
 #include "wifi/AccessPoint.hpp"
-#include "wifi/LedMatrix.hpp"
 
 
 void printWiFiStatus();

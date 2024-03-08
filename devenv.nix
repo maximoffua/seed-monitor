@@ -40,8 +40,8 @@ in {
     export PYTHONPATH="$VENV_PATH/lib/python3.11/site-packages:$PYTHONPATH"
   '';
 
-  scripts.build.exec = "pio run -e $1";
-  scripts.upload.exec = "pio run -e $1 -t upload";
+  scripts.build.exec = lib.mkDefault "pio run -e $1";
+  scripts.upload.exec = lib.mkDefault "pio run -e $1 -t upload";
 
   # https://devenv.sh/pre-commit-hooks/
   # pre-commit.hooks.shellcheck.enable = true;
