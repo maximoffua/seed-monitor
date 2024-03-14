@@ -24,6 +24,7 @@
 
 namespace mtech
 {
+const char* statusToString(int status);
 
 
 class WiFiClient
@@ -64,7 +65,7 @@ public:
 
     State loop() noexcept;
 
-    void updateStatus();
+    int updateStatus();
 
     [[nodiscard]] size_t elapsed() const;
 
@@ -74,6 +75,8 @@ private:
     size_t opStart{};
     StateMachine stm{};
 };
+
+const char* stateToString(WiFiClient::State state);
 
 } // mtech
 

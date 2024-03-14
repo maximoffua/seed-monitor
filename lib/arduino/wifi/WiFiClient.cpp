@@ -8,12 +8,51 @@
 namespace mtech
 {
 
+const char *stateToString(WiFiClient::State state)
+{
+    switch (state) {
+        case WiFiClient::State::Idle:
+            return "Idle";
+        case WiFiClient::State::Connecting:
+            return "Connecting";
+        case WiFiClient::State::Connected:
+            return "Connected";
+        case WiFiClient::State::Disconnected:
+            return "Disconnected";
+    }
+    return "Unknown";
+}
+
+const char *statusToString(int status)
+{
+    switch (status) {
+        case WL_NO_SHIELD:
+            return "WL_NO_SHIELD";
+        case WL_IDLE_STATUS:
+            return "WL_IDLE_STATUS";
+        case WL_NO_SSID_AVAIL:
+            return "WL_NO_SSID_AVAIL";
+        case WL_SCAN_COMPLETED:
+            return "WL_SCAN_COMPLETED";
+        case WL_CONNECTED:
+            return "WL_CONNECTED";
+        case WL_CONNECT_FAILED:
+            return "WL_CONNECT_FAILED";
+        case WL_CONNECTION_LOST:
+            return "WL_CONNECTION_LOST";
+        case WL_DISCONNECTED:
+            return "WL_DISCONNECTED";
+    }
+    return "Unknown";
+}
+
 unsigned char WiFiClient::connect(const char *ssid, const char *pass, int timeout)
 {
     // attempt to connect to WiFi network:
     opStart = millis();
     // Connect to WPA/WPA2 network:
     status = static_cast<int>(WiFi.begin(ssid, pass));
+    Serial.println(statusToString(status));
     stm.state = StateMachine::Connecting;
 //        Serial.print("Attempting initial connection to WPA SSID: ");
 //        Serial.println(ssid);
@@ -114,33 +153,29 @@ WiFiClient::State WiFiClient::loop() noexcept
     }
     return stm.state;
 }
-void WiFiClient::updateStatus()
+int WiFiClient::updateStatus()
 {
     status = WiFi.status();
     switch (status) {
         case WL_CONNECTED:
-            Serial.println("Connected");
             stm.state = StateMachine::Connected;
             break;
         case WL_CONNECT_FAILED:
-            Serial.println("Connection failed");
             stm.state = StateMachine::Disconnected;
             break;
         case WL_CONNECTION_LOST:
-            Serial.println("Connection lost");
             stm.state = StateMachine::Disconnected;
             break;
         case WL_NO_SSID_AVAIL:
-            Serial.println("No SSID available");
             stm.state = StateMachine::Disconnected;
             break;
         case WL_DISCONNECTED:
-            Serial.println("Disconnected");
             stm.state = StateMachine::Disconnected;
             break;
         default:
             stm.state = StateMachine::Idle;
     }
+    return status;
 }
 size_t WiFiClient::elapsed() const
 {

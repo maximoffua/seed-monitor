@@ -91,7 +91,16 @@ public:
             }
         }
     }
-
+    // Function to remove client from the list
+    void disable(const ::WiFiClient& client) {
+        for (size_t i = 0; i < clients.size(); ++i) {
+            if (clients[i] == client) {
+                clients[i]._sock = -1;
+                --active;
+                return;
+            }
+        }
+    }
     void remove(int index) {
         if (index < clients.size()) {
             clients[index].stop();
@@ -108,9 +117,9 @@ public:
     {
         return active;
     }
-private:
     std::array<::WiFiClient, COUNT> clients{};
     std::uint32_t active{0};
+private:
 };
 
 // HTTP client which can handle SSE stream (based on WiFiClient)

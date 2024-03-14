@@ -31,7 +31,7 @@ public:
 
     void setup()
     {
-        matrix.begin();
+//        matrix.begin();
     }
 
     void loop()

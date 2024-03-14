@@ -4,8 +4,11 @@ import requests
 import sys
 from os.path import basename
 
-Import('env')
-Import("projenv")
+Import("env")
+try:
+    Import("projenv")
+except:
+    projenv = DefaultEnvironment()
 
 
 def publish_firmware(source, target, env):
@@ -14,8 +17,8 @@ def publish_firmware(source, target, env):
 
 
 # Custom upload command and program name
-env.Replace(PROGNAME="firmware", UPLOADCMD=publish_firmware)
-env.AddCustomTarget("remote", None, 'upload')
+# env.Replace(PROGNAME="firmware", UPLOADCMD=publish_firmware)
+env.AddCustomTarget("remote", None, "upload $PIOENV")
 
 # Environment variable name and fallback value
 fromEnv = [
@@ -29,5 +32,5 @@ fromEnv = [
 wifi_defs = [(var, env.StringifyMacro(val)) for var, val in map(lambda x: (x[0], getenv(*x)), fromEnv) if val]
 # wifi_settings = [f"-D{var}={env.StringifyMacro(val)}" for var, val in map(lambda x: (x[0], getenv(*x)), fromEnv) if val]
 # print(wifi_settings)
-
 projenv.Append(CPPDEFINES=wifi_defs)
+

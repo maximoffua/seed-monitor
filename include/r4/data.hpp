@@ -7,10 +7,8 @@
 #define DATA_HPP
 
 // a nice looking web page with SSE stream of values from ADC
-constexpr auto indexHtml = R"(
-<!DOCTYPE html>
-<html>
-<head>
+constexpr auto indexHtml = R"(<!DOCTYPE html>
+<html><head>
     <title>Seeder monitor</title>
     <style>
         body {
@@ -37,36 +35,26 @@ constexpr auto indexHtml = R"(
         .container form {
             margin-top: 20px;
         }
-        .container form input[type="text"] {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 10px;
-            border: 1px solid #ddd;
-        }
-        .container form input[type="submit"] {
-            width: 100%;
-            padding: 10px;
-            background-color: #4caf50;
-            color: #fff;
-            border: none;
-            cursor: pointer;
-        }
     </style>
     <script>
         var source = new EventSource('/adc');
         source.onmessage = function(event) {
-            document.getElementById('adc').innerHTML = event.data;
+            const values = JSON.parse(event.data);
+            console.log(event, event.data, values);
+            for (let i = 0; i < values.length; i++) {
+                document.getElementById('adc' + i).innerHTML = values[i];
+            }
         };
     </script>
 </head>
 <body>
     <h1>Seeder monitor</h1>
     <div class="container">
-            <p>ADC value: <span id="adc">0</span></p>
+        <p>ADC0 value: <span id="adc0">0</span></p>
+        <p>ADC1 value: <span id="adc1">0</span></p>
+        <p>ADC2 value: <span id="adc2">0</span></p>
     </div>
-</body>
-</html>
-)";
+</body></html>)";
 
 //    <p>Enter the URL of the file you want to download.</p>
 //    <form action="/download" method="post">
