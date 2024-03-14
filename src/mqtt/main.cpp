@@ -21,11 +21,12 @@ using STM = Wireless::StateMachine;
 
 mtech::WiFiClient::StateMachine::action mtech::WiFiClient::StateMachine::stateMap[State::count] = {};
 
-
 Wireless wlan{};
+
 WiFiServer server(80);
 
 mtech::Connections<5> clients{};
+
 mtech::Connections<3> streams{};
 
 Sensor sensors[] = {Sensor{A0}, Sensor{A1}, Sensor{A2}, Sensor{A3}};
@@ -45,7 +46,7 @@ void setup()
     pinMode(led, OUTPUT);
 
     // init ADC pins
-    for (auto &sens: sensors) {
+    for (auto &sens : sensors) {
         sens.setup();
     }
 
@@ -86,12 +87,12 @@ void setup()
         if (!client || clients.capacity() == clients.size()) {
             return;
         }
-        for (const auto &existing: clients) {
+        for (const auto &existing : clients) {
             if (client == existing) {
                 return;
             }
         }
-        for (const auto &existing: streams) {
+        for (const auto &existing : streams) {
             if (client == existing) {
                 return;
             }
@@ -155,23 +156,16 @@ void processClients()
 
 void processClient(WiFiClient &client)
 {
-    static int route {0};
-    String currentLine = "";                // make a String to hold incoming data from the client
-    while (client.available()) {             // if there's bytes to read from the client,
-        char c = static_cast<char>(client.read()); // read a byte, then
-        Serial.write(c);                    // print it out to the serial monitor
-        if (c == '\n' && route == 0) {                    // if the byte is a newline character
-            route = 1;
-        } else if (c != '\r') {    // if you got anything else but a carriage return character,
-            currentLine += c;      // add it to the end of the currentLine
-        }
-        // Check if the client request was "GET /H" or "GET /L":
-        if (currentLine.endsWith("GET /adc")) {
-            route = 2;
-        } else if (currentLine.endsWith("GET /")) {
-            route = 1;
-        }
+    static int route{0};
+    auto line = client.readStringUntil('\r');
+    Serial.println(line);
+    if (line.startsWith("GET / ")) {
+        route = 1;
     }
+    else if (line.startsWith("GET /adc ")) {
+        route = 2;
+    }
+    readAll(client);
 
     // Streaming route /adc
     if (route == 2) {
@@ -184,34 +178,26 @@ void processClient(WiFiClient &client)
         client.println("data: starting stream");
         streams.push(client);
         clients.disable(client);
-    } else {
-        // if the current line is blank, you got two newline characters in a row.
-        // that's the end of the client HTTP request, so send a response:
-        if (currentLine.length() == 0) {
-            Serial.print("Sending HTML page to client... ");
-            // HTTP headers always start with a response code (e.g. HTTP/1.1 200 OK)
-            // and a content-type so the client knows what's coming, then a blank line:
-            client.println("HTTP/1.1 200 OK");
-            client.println("Content-type:text/html");
-            client.println();
-            // the content of the HTTP response follows the header:
-            client.print(indexHtml);
-            // The HTTP response ends with another blank line:
-            client.println();
-            delay(8);
-            client.stop();
-            Serial.println("OK");
-            Serial.flush();
-        } else {      // if you got a newline, then clear currentLine:
-            currentLine = "";
-        }
+    }
+    else {
+        // HTTP headers always start with a response code (e.g. HTTP/1.1 200 OK)
+        // and a content-type so the client knows what's coming, then a blank line:
+        client.println("HTTP/1.1 200 OK");
+        client.println("Content-type:text/html");
+        client.println();
+        // the content of the HTTP response follows the header:
+        client.print(indexHtml);
+        // The HTTP response ends with another blank line:
+        client.println();
+        delay(8);
+        client.stop();
     }
     route = 0;
 }
 
 void processStreams()
 {
-    for (auto &stream: streams.clients) {
+    for (auto &stream : streams.clients) {
         if (!stream) {
             continue;
         }
@@ -239,7 +225,7 @@ void sendData(Print &stream)
 {
     stream.print("data: [");
     for (uint8_t i = 0; i < (sizeof(sensors) / sizeof(Sensor)); ++i) {
-        auto& sens = sensors[i];
+        auto &sens = sensors[i];
         stream.print(sens.value());
         if (i < (sizeof(sensors) / sizeof(Sensor)) - 1) {
             stream.print(',');
