@@ -17,3 +17,4 @@ devenv.local.nix
 .pio
 
 /compile_commands.json
+.cache/
