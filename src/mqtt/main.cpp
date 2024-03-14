@@ -5,7 +5,6 @@
 #include <Arduino.h>
 #include <wifi/WiFiClient.hpp>
 #include "r4/config.hpp"
-#include "r4/LedMatrix.hpp"
 #include "wifi/Connections.hpp"
 #include "r4/data.hpp"
 #include "r4/sensor.hpp"
@@ -46,10 +45,9 @@ void setup()
     pinMode(led, OUTPUT);
 
     // init ADC pins
-    pinMode(A0, INPUT);
-    pinMode(A1, INPUT);
-    pinMode(A2, INPUT);
-    pinMode(A3, INPUT);
+    for (auto &sens: sensors) {
+        sens.setup();
+    }
 
     Serial.println("Initializing matrix...");
 //    matrix.begin();
@@ -112,10 +110,12 @@ void setup()
 void loop()
 {
     const auto start = millis();
+
     processWlan();
 //    matrix.loop();
     processClients();
     processStreams();
+
     const auto end = millis();
     Serial.print("Loop duration: ");
     Serial.println(end - start);
@@ -209,32 +209,8 @@ void processClient(WiFiClient &client)
     route = 0;
 }
 
-std::tuple<int, int, int, int> measure()
-{
-    int adc0 = analogRead(A0);
-    int adc1 = analogRead(A1);
-    int adc2 = analogRead(A2);
-    int adc3 = analogRead(A3);
-    return {adc0, adc1, adc2, adc3};
-}
 void processStreams()
 {
-    static uint32_t last = millis();
-    const auto& [adc0, adc1, adc2, adc3] = measure();
-    if (millis() - last > 3000) {
-        Serial.print("measuring ADC... ");
-        Serial.print(adc0);
-        Serial.print(" | ");
-        Serial.print(adc1);
-        Serial.print(" | ");
-        Serial.print(adc2);
-        Serial.print(" | ");
-        Serial.print(adc3);
-        Serial.print(" / ");
-        Serial.print(streams.size());
-        Serial.println(" streams");
-        last = millis();
-    }
     for (auto &stream: streams.clients) {
         if (!stream) {
             continue;
@@ -245,19 +221,12 @@ void processStreams()
             stream.stop();
             continue;
         }
-        stream.print("data: [");
-        stream.print(adc0);
-        stream.print(',');
-        stream.print(adc1);
-        stream.print(',');
-        stream.print(adc2);
-        stream.print(',');
-        stream.print(adc3);
-        stream.println(']');
+        sendData(stream);
         stream.println();
         stream.flush();
     }
 }
+
 void readAll(WiFiClient &client)
 {
     while (client.available()) {
@@ -265,17 +234,16 @@ void readAll(WiFiClient &client)
         Serial.write(c);
     }
 }
+
 void sendData(Print &stream)
 {
     stream.print("data: [");
     for (uint8_t i = 0; i < (sizeof(sensors) / sizeof(Sensor)); ++i) {
-        stream.print("ADC");
-        stream.print(i);
-        stream.print(':');
         auto& sens = sensors[i];
         stream.print(sens.value());
         if (i < (sizeof(sensors) / sizeof(Sensor)) - 1) {
-            stream.print('\t');
+            stream.print(',');
         }
     }
+    stream.println(']');
 }

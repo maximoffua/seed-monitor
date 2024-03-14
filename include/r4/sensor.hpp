@@ -42,6 +42,10 @@ public:
         return last;
     }
 
+    void setup() const {
+        pinMode(pin, INPUT);
+    }
+
 private:
     uint8_t pin{A0};
     uint16_t last{};
