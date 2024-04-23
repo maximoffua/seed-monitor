@@ -26,7 +26,7 @@
         ],
         "device_name": "MCU_STM32F401CC"
     },
-    "BLACKPILL_F411CE": {
+    "MY_BLACKPILL_F411CE": {
         "inherits": [
             "MCU_STM32F4"
         ],

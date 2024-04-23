@@ -3,6 +3,7 @@
 //
 
 #include <Arduino.h>
+#include <array>
 #include <wifi/WiFiClient.hpp>
 #include "r4/config.hpp"
 #include "wifi/Connections.hpp"
@@ -15,6 +16,7 @@ void processClient(WiFiClient &client);
 void processStreams();
 void readAll(WiFiClient &client);
 void sendData(Print &stream);
+void printSensors(uint32_t time);
 
 using Wireless = mtech::WiFiClient;
 using STM = Wireless::StateMachine;
@@ -29,7 +31,12 @@ mtech::Connections<5> clients{};
 
 mtech::Connections<3> streams{};
 
-Sensor sensors[] = {Sensor{A0}, Sensor{A1}, Sensor{A2}, Sensor{A3}};
+std::array<Sensor, 2> sensors = {
+    Sensor{A0}, 
+    Sensor{A1},
+    // Sensor{A2},
+    // Sensor{A3}
+};
 
 //mtech::LEDMatrix matrix{};
 //ArduinoLEDMatrix matrix{};
@@ -110,16 +117,24 @@ void setup()
 
 void loop()
 {
-    const auto start = millis();
+    // const auto start = millis();
 
-    processWlan();
-//    matrix.loop();
-    processClients();
-    processStreams();
+    // processWlan();
+    // matrix.loop();
 
-    const auto end = millis();
-    Serial.print("Loop duration: ");
-    Serial.println(end - start);
+    for (auto& sens: sensors) sens.loop();
+    auto t = millis();
+    printSensors(t); 
+
+    // processClients();
+    // processStreams();
+
+    // Serial.print("loop_duration:");
+    // Serial.println(millis() - start);
+}
+
+void checkReset() {
+
 }
 
 void processWlan()
@@ -224,12 +239,21 @@ void readAll(WiFiClient &client)
 void sendData(Print &stream)
 {
     stream.print("data: [");
-    for (uint8_t i = 0; i < (sizeof(sensors) / sizeof(Sensor)); ++i) {
+    for (uint8_t i = 0; i < sensors.size(); ++i) {
         auto &sens = sensors[i];
         stream.print(sens.value());
-        if (i < (sizeof(sensors) / sizeof(Sensor)) - 1) {
+        if (i < sensors.size() - 1) {
             stream.print(',');
         }
     }
     stream.println(']');
+}
+
+void printSensors(uint32_t time) {
+    Serial.print("time:"); Serial.print(time); Serial.print('\t');
+    for (int i = 0; i < sensors.size(); ++i){
+        sensors[i].printThis(Serial, i);
+        if (i < sensors.size() - 1) Serial.print('\t');
+    }
+    Serial.println();
 }

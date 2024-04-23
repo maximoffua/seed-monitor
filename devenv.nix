@@ -23,6 +23,7 @@ in {
         pkgs.platformio
       ]);
   };
+  languages.go.enable = true;
 
   languages.platformio = {
     enable = true;
@@ -33,6 +34,8 @@ in {
   packages = [
     pkgs.gcc-arm-embedded
     pkgs.openocd
+    pkgs.cobra-cli
+    pkgs.influxdb2
   ];
 
   enterShell = ''
@@ -42,6 +45,8 @@ in {
 
   scripts.build.exec = lib.mkDefault "pio run -e $1";
   scripts.upload.exec = lib.mkDefault "pio run -e $1 -t upload";
+
+  processes.influxdb2.exec = "influxd";
 
   # https://devenv.sh/pre-commit-hooks/
   # pre-commit.hooks.shellcheck.enable = true;
